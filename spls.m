@@ -23,7 +23,7 @@ function [u, v, success] = spls(X, Y, lu, lv, e, itr_lim)
 %            success - will return "false" if something went wrong during
 %                      the weight vector computation
 %
-%   Version: 2016-07-06
+%   Version: 2016-07-29
 %__________________________________________________________________________
 
 % Written by Joao Matos Monteiro
@@ -133,7 +133,7 @@ while diff > e && success
     v_temp(:,1) = v_temp(:,2);
     
     if i >= itr_lim
-        if ~no_print; warning('Maximum number of iterations reached.'); end
+        warning('Maximum number of iterations reached.');
         success = false;
     end
     
