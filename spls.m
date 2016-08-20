@@ -1,4 +1,4 @@
-function [u, v, success] = spls(X, Y, lu, lv, e, itr_lim)
+function [u, v, success] = spls(X, Y, cu, cv, e, itr_lim)
 %
 %   Sparse PLS algorithm, please check Monteiro et al. 2016 for details:
 %   doi:10.1016/j.jneumeth.2016.06.011
@@ -6,7 +6,7 @@ function [u, v, success] = spls(X, Y, lu, lv, e, itr_lim)
 %   Inputs: X, Y    - data matrices in the form: samples x features. These
 %                     should have each feature with mean = 0 and std = 1;
 %
-%           lu, lv  - sparcity regularization hyperparameters, must be
+%           cu, cv  - sparcity regularization hyperparameters, must be
 %                     between 1 and sqrt(number_features). The lower it is,
 %                     the spaser the solution. If it is outside this range,
 %                     no sparsity will be applied in the corresponding view.
@@ -23,7 +23,7 @@ function [u, v, success] = spls(X, Y, lu, lv, e, itr_lim)
 %            success - will return "false" if something went wrong during
 %                      the weight vector computation
 %
-%   Version: 2016-07-29
+%   Version: 2016-08-20
 %__________________________________________________________________________
 
 % Written by Joao Matos Monteiro
@@ -34,15 +34,17 @@ function [u, v, success] = spls(X, Y, lu, lv, e, itr_lim)
 %--------------------------------------------------------------------------
 
 % Check if lu anv lv obey the limits
-if lu < 1 || lu > sqrt(size(X,2))
+if cu < 1 || cu > sqrt(size(X,2))
     warning('lu is out of interval: 1 <= lu <= sqrt(size(X,2). Not using spasity on u.')
     no_sparse_X = true;
+    failed_sparsity_u = false;
 else
     no_sparse_X = false;
 end
-if lv < 1 || lv > sqrt(size(Y,2))
+if cv < 1 || cv > sqrt(size(Y,2))
     warning('lv is out of interval: 1 <= lv <= sqrt(size(Y,2). Not using spasity on v.')
     no_sparse_Y = true;
+    failed_sparsity_v = false;
 else
     no_sparse_Y = false;
 end
@@ -91,7 +93,7 @@ while diff > e && success
         u_temp(:,2) = C*v_temp(:,1);
         u_temp(:,2) = u_temp(:,2)./norm(u_temp(:,2), 2);
     else
-        [u_temp(:,2), tmp_success] = update(C*v_temp(:,1), lu);
+        [u_temp(:,2), tmp_success] = update(C*v_temp(:,1), cu);
         failed_sparsity_u = ~tmp_success;
         if failed_sparsity_u % If it was not successful, return non sparse version
             u_temp(:,2) = C*v_temp(:,1);
@@ -110,7 +112,7 @@ while diff > e && success
         v_temp(:,2) = C'*u_temp(:,2);
         v_temp(:,2) = v_temp(:,2)./norm(v_temp(:,2), 2);
     else
-        [v_temp(:,2), tmp_success] = update(C'*u_temp(:,2), lv);
+        [v_temp(:,2), tmp_success] = update(C'*u_temp(:,2), cv);
         failed_sparsity_v = ~tmp_success;
         if failed_sparsity_v % If it was not successful, return non sparse version
             v_temp(:,2) = C'*u_temp(:,2);
